@@ -1,0 +1,68 @@
+import pandas as pd 
+import matplotlib.pyplot as plt 
+import seaborn as sns 
+import numpy as np 
+
+df = pd.read_json('your_posts_1.json')
+
+df.rename(columns={'timestamp': 'date'}, inplace=True)
+
+df = df.drop(['attachments', 'title', 'tags'], axis=1)
+
+df['date'] = pd.to_datetime(df['date'])
+
+df.set_index('date',inplace=True)
+
+post_counts=df.resample('MS').size()
+
+#start_date = '2021-11-15'
+#end_date   = '2022-11-18'
+#df2 = df.query('date >= @start_date and date <= @end_date')
+
+sns.set(rc={'figure.figsize':(30,20)})
+sns.set(font_scale=3)
+
+x_labels = post_counts.index
+
+fig, ax = plt.subplots()
+ax.bar(x_labels,post_counts,color = "black",edgecolor = "black", linewidth = 2)
+
+plt.plot(post_counts, marker='o')
+
+#ax = post_counts.plot(x='Date', y='Number of posts')
+
+#xcoords = ['2008-01-01', '2009-01-01', '2010-01-01', '2011-01-01', '2012-01-01', '2013-01-01', '2014-01-01', '2015-01-01', '2016-01-01','2017-01-01', '2018-01-01', '2019-01-01', '2020-01-01', '2021-01-01', '2022-01-01', '2023-01-01']
+#for xc in xcoords:
+#    plt.axvline(x=xc, color='black', linestyle='--')
+
+post_counts.hist()
+#plt.hist(post_counts, bins=20, linewidth=0.5, edgecolor="white")
+#post_counts.plot(kind='kde')
+
+pd.plotting.lag_plot(post_counts, lag=1)   
+
+#from statsmodels.graphics.tsaplots import plot_acf
+#plot_acf(post_counts)
+
+
+split = round(len(post_counts) / 2)
+X1, X2 = post_counts[0:split], post_counts[split:]
+mean1, mean2 = X1.mean(), X2.mean()
+var1, var2 = X1.var(), X2.var()
+print('mean1=%f, mean2=%f' % (mean1, mean2))
+print('variance1=%f, variance2=%f' % (var1, var2))
+
+from statsmodels.tsa.stattools import adfuller
+
+from statsmodels.tsa.stattools import adfuller
+
+result = adfuller(post_counts)
+print('ADF Statistic: %f' % result[0])
+print('p-value: %f' % result[1])
+print('used lag: %f' % result[2])
+print('num. of obs.: %f' % result[3])
+print('Critical Values:')
+for key, value in result[4].items():
+ print('\t%s: %.3f' % (key, value))
+
+print('The maximized information criterion if autolag is not None: %f' % result[5])
